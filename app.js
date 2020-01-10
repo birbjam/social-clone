@@ -2,8 +2,6 @@ const express = require('express')
 const app = express()
 const router = require('./router')
 
-let port = process.env.PORT || 3000
-
 // Setting up code to accept two of the most common ways of submitting data
 // Traditional HTML form submit
 app.use(express.urlencoded({ extended: false }))
@@ -16,4 +14,4 @@ app.set('view engine', 'ejs')
 
 app.use('/', router)
 
-app.listen(port)
+module.exports = app
