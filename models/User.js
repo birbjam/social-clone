@@ -53,6 +53,22 @@ User.prototype.validate = function () {
   }
 }
 
+User.prototype.login = function () {
+  return new Promise((resolve, reject) => {
+    this.cleanUp()
+    usersCollection.findOne(
+      { username: this.data.username }).then((attemptedUser) => {
+      if (attemptedUser && attemptedUser.password == this.data.password) {
+        resolve('Success!')
+      } else {
+        reject('Incorrect Username or Password.')
+      }
+    }).catch(function () {
+      reject('Try again later.')
+    })
+  })
+}
+
 User.prototype.register = function () {
   // Validate user data
   this.cleanUp()
