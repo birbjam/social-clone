@@ -27,31 +27,61 @@ User.prototype.cleanUp = function () {
   }
 }
 
-User.prototype.validate = function () {
-  if (this.data.username === '') {
-    this.errors.push('You must provide a username.')
-  }
-  if (this.data.username != '' && !validator.isAlphanumeric(this.data.username)) {
-    this.errors.push('Username can only contain letters and numbers.')
-  }
-  if (!validator.isEmail(this.data.email)) {
-    this.errors.push('You must provide a valid email.')
-  }
-  if (this.data.password === '') {
-    this.errors.push('You must provide a password.')
-  }
-  if (this.data.password.length > 0 && this.data.password.length < 12) {
-    this.errors.push('Password must be at least 12 characters.')
-  }
-  if (this.data.password.length > 50) {
-    this.errors.push('Password must be under 50 characters.')
-  }
-  if (this.data.username.length > 0 && this.data.username.length < 3) {
-    this.errors.push('Username must be at least 3 characters.')
-  }
-  if (this.data.username.length > 30) {
-    this.errors.push('Username must be under 30 characters.')
-  }
+User.prototype.validate = function() {
+  return new Promise(async (resolve, reject) => {
+    if (this.data.username === "") {
+      this.errors.push("You must provide a username.");
+    }
+    if (
+      this.data.username != "" &&
+      !validator.isAlphanumeric(this.data.username)
+    ) {
+      this.errors.push("Username can only contain letters and numbers.");
+    }
+    if (!validator.isEmail(this.data.email)) {
+      this.errors.push("You must provide a valid email.");
+    }
+    if (this.data.password === "") {
+      this.errors.push("You must provide a password.");
+    }
+    if (this.data.password.length > 0 && this.data.password.length < 12) {
+      this.errors.push("Password must be at least 12 characters.");
+    }
+    if (this.data.password.length > 50) {
+      this.errors.push("Password must be under 50 characters.");
+    }
+    if (this.data.username.length > 0 && this.data.username.length < 3) {
+      this.errors.push("Username must be at least 3 characters.");
+    }
+    if (this.data.username.length > 30) {
+      this.errors.push("Username must be under 30 characters.");
+    }
+
+    // If username is valid, check to see if it already exists
+    if (
+      this.data.username > 2 &&
+      this.data.username.length < 31 &&
+      validator.isAlphanumeric(this.data.username)
+    ) {
+      let usernameExists = await usersCollection.findOne({
+        username: this.data.username
+      });
+      if (usernameExists) {
+        this.errors.push("This username already exists.");
+      }
+    }
+
+    // If the email is valid, check to see if it already exists.
+    if (validator.isEmail(this.data.email)) {
+      let emailExists = await usersCollection.findOne({
+        email: this.data.email
+      });
+      if (emailExists) {
+        this.errors.push("This email already being used.");
+      }
+    }
+    resolve()
+  })
 }
 
 User.prototype.login = function () {
@@ -71,18 +101,23 @@ User.prototype.login = function () {
 }
 
 User.prototype.register = function () {
-  // Validate user data
-  this.cleanUp()
-  this.validate()
-  // Only if there are no validation errors
-  // save user data into a database
-  if (!this.errors.length) {
-    // Hashes user password
-    let salt = bcrypt.genSaltSync(10)
-    this.data.password = bcrypt.hashSync(this.data.password, salt)
-    // Adds the user to the database
-    usersCollection.insertOne(this.data)
-  }
+  return new Promise(async (resolve, reject) => {
+    // Validate user data
+    this.cleanUp()
+    await this.validate()
+    // Only if there are no validation errors
+    // save user data into a database
+    if (!this.errors.length) {
+      // Hashes user password
+      let salt = bcrypt.genSaltSync(10)
+      this.data.password = bcrypt.hashSync(this.data.password, salt)
+      // Adds the user to the database
+      await usersCollection.insertOne(this.data)
+      resolve()
+    } else {
+      reject(this.errors)
+    }
+  })
 }
 
 module.exports = User
