@@ -3,6 +3,7 @@ const app = express()
 const router = require('./router')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')(session)
+const flash = require('connect-flash')
 
 // Configuration for a session
 let sessionOptions = session({
@@ -17,6 +18,7 @@ let sessionOptions = session({
 })
 
 app.use(sessionOptions)
+app.use(flash())
 
 // Setting up code to accept two of the most common ways of submitting data
 // Traditional HTML form submit
