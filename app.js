@@ -20,6 +20,11 @@ let sessionOptions = session({
 app.use(sessionOptions)
 app.use(flash())
 
+app.use(function(req, res, next) {
+  res.locals.user = req.session.user
+  next()
+})
+
 // Setting up code to accept two of the most common ways of submitting data
 // Traditional HTML form submit
 app.use(express.urlencoded({ extended: false }))
